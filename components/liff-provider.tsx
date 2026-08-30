@@ -8,6 +8,17 @@ type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "error";
 type LiffState = { ready: boolean; status: AuthStatus; isMock: boolean; hasResidentSession: boolean; displayName: string; idToken?: string; error?: string; login: () => void; retry: () => void };
 const LiffContext = createContext<LiffState | null>(null);
 const LIFF_ID_KEY = "dormitory.active_liff_id";
+const LIFF_INIT_TIMEOUT_MS = 15_000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+    promise.then(
+      (value) => { window.clearTimeout(timeout); resolve(value); },
+      (reason) => { window.clearTimeout(timeout); reject(reason); },
+    );
+  });
+}
 
 function resolveLiffId(): string | undefined {
   if (typeof window === "undefined") return process.env.NEXT_PUBLIC_LIFF_ID;
@@ -39,7 +50,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
       setState({ ready: true, status: "error", isMock: false, hasResidentSession: false, displayName: "", error: "ยังไม่ได้ตั้งค่า LIFF ID สำหรับ Mini App นี้" });
       return;
     }
-    void liff.init({ liffId }).then(async () => {
+    void withTimeout(liff.init({ liffId }), LIFF_INIT_TIMEOUT_MS, "เชื่อมต่อ LINE นานเกินไป กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง").then(async () => {
       if (!liff.isLoggedIn()) { if (active) setState({ ready: true, status: "unauthenticated", isMock: false, hasResidentSession: false, displayName: "" }); return; }
       const idToken = liff.getIDToken();
       if (!idToken) throw new Error("LINE Login ต้องเปิด scope `openid` เพื่อยืนยันตัวตน");

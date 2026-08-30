@@ -4,6 +4,7 @@ import type { BranchClaimInfo, ClaimInvite, Invoice, PaymentHistoryItem, Residen
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/v1";
 const MOCK_MODE = process.env.NEXT_PUBLIC_MOCK_MODE === "true";
+const REQUEST_TIMEOUT_MS = 20_000;
 
 interface ResidentSession { accessToken: string; expiresInSeconds: number; }
 interface ClaimSession extends ResidentSession { resident?: { id: string; displayName?: string }; }
@@ -27,10 +28,23 @@ export class ApiClientError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = typeof window === "undefined" ? null : sessionStorage.getItem("resident_access_token");
   const isMultipart = typeof FormData !== "undefined" && init?.body instanceof FormData;
-  const response = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers: { ...(isMultipart ? {} : { "Content-Type": "application/json" }), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init?.headers },
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: { ...(isMultipart ? {} : { "Content-Type": "application/json" }), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init?.headers },
+    });
+  } catch (reason) {
+    if (reason instanceof DOMException && reason.name === "AbortError") {
+      throw new ApiClientError(504, "ระบบใช้เวลาตอบกลับนานเกินไป กรุณาลองใหม่อีกครั้ง");
+    }
+    throw reason;
+  } finally {
+    window.clearTimeout(timeout);
+  }
   const envelope = await response.json().catch(() => null) as (ApiEnvelope<T> & { errors?: Array<{ message?: string }> | { message?: string } }) | null;
   const apiMessage = Array.isArray(envelope?.errors) ? envelope.errors[0]?.message : envelope?.errors?.message;
   if (!response.ok) throw new ApiClientError(response.status, apiMessage ?? (response.status === 401 ? "ยังไม่ได้ผูกบัญชี LINE กับห้อง" : response.status === 403 ? "คุณไม่มีสิทธิ์ดูข้อมูลนี้" : "เชื่อมต่อระบบไม่สำเร็จ ลองอีกครั้ง"));

@@ -1,3 +1,8 @@
 export function AppLoading() {
-  return <div className="page" aria-live="polite"><div className="skeleton" style={{ height: 188 }} /><div className="skeleton" style={{ height: 126, marginTop: 16 }} /><span className="sr-only">กำลังโหลดข้อมูล</span></div>;
+  return <div className="app-loading" aria-live="polite" role="status">
+    <div className="app-loading-mark"><span /></div>
+    <strong>กำลังเปิดระบบหอพัก</strong>
+    <p>กำลังยืนยันบัญชี LINE และโหลดข้อมูลของคุณ</p>
+    <div className="app-loading-dots" aria-hidden="true"><i /><i /><i /></div>
+  </div>;
 }
