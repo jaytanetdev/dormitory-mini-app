@@ -77,6 +77,10 @@ export const api = {
     const value = mockInvoices.find((invoice) => invoice.id === id) ?? mockInvoices[0];
     return MOCK_MODE ? delay(value) : request<RawInvoice>(`/miniapp/invoices/${id}`).then(mapInvoice);
   },
+  paymentQr: async (id: string): Promise<{ amount: number; accountName: string; qrDataUrl: string }> => {
+    if (MOCK_MODE) return delay({ amount: mockInvoices.find((invoice) => invoice.id === id)?.total ?? 0, accountName: "บัญชี PromptPay", qrDataUrl: "" });
+    return request<{ amount: number; accountName: string; qrDataUrl: string }>(`/miniapp/invoices/${id}/payment-qr`);
+  },
   payments: async (): Promise<PaymentHistoryItem[]> => {
     if (MOCK_MODE) return delay(mockPayments);
     const invoices = await request<RawInvoice[]>("/miniapp/invoices");

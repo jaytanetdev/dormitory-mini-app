@@ -17,7 +17,6 @@ Copy `.env.example` to `.env.local`. The default mock mode works without LINE or
 | `NEXT_PUBLIC_MOCK_MODE` | Only the explicit value `true` enables local demo data. It never falls back silently. |
 | `NEXT_PUBLIC_API_URL` | NestJS API base URL when mock mode is disabled. |
 | `NEXT_PUBLIC_LIFF_ID` | LIFF ID from LINE Developers Console. |
-| `NEXT_PUBLIC_PROMPTPAY_ID` | Phone number or 13-digit national/tax ID used to create exact-amount QR. |
 | `NEXT_PUBLIC_SLIP_UPLOAD_URL` | Object-storage upload adapter; must return `{ url }` or `{ data: { url } }`. |
 
 ## Routes
