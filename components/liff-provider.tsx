@@ -56,7 +56,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
       if (!idToken) throw new Error("LINE Login ต้องเปิด scope `openid` เพื่อยืนยันตัวตน");
       const profile = await liff.getProfile();
       try {
-        const session = await api.createResidentSession(idToken);
+        const session = await api.createResidentSession(idToken, liffId);
         sessionStorage.setItem("resident_access_token", session.accessToken);
         if (active) setState({ ready: true, status: "authenticated", isMock: false, hasResidentSession: true, displayName: profile.displayName, idToken });
       } catch (reason) {
