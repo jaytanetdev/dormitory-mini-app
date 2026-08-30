@@ -17,7 +17,7 @@ interface RawInvoice {
   room: { number: string }; period: { year: number; month: number }; items?: RawInvoiceItem[];
   payments?: Array<{ id?: string; amount: string | number; paidAt?: string; status?: "PENDING" | "APPROVED" | "REJECTED" }>;
 }
-interface RawInvite { expiresAt: string; room: { number: string }; property: { name: string }; residentHint?: string; }
+interface RawInvite { expiresAt: string; room: { number: string }; property: { name: string }; branch?: { name: string; address?: string | null; phone?: string | null }; residentHint?: string; }
 interface RawBranchClaim { branch: { name: string; address?: string | null; phone?: string | null }; line?: { liffId?: string | null; displayName?: string | null }; }
 
 export class ApiClientError extends Error {
@@ -93,12 +93,12 @@ export const api = {
   invite: async (token: string): Promise<ClaimInvite> => {
     if (MOCK_MODE) return delay({ ...mockInvite, token });
     const raw = await request<RawInvite>(`/miniapp/invites/${token}`);
-    return { token, roomNumber: raw.room.number, propertyName: raw.property.name, branchName: "", expiresAt: raw.expiresAt };
+    return { token, roomNumber: raw.room.number, propertyName: raw.property.name, branchName: raw.branch?.name ?? "", branchAddress: raw.branch?.address, branchPhone: raw.branch?.phone, expiresAt: raw.expiresAt };
   },
-  claim: async (token: string, idToken: string): Promise<ClaimSession> => {
+  claim: async (token: string, input: { idToken: string; fullName: string; phone?: string; email?: string }): Promise<ClaimSession> => {
     const result = MOCK_MODE
       ? await delay<ClaimSession>({ accessToken: "mock-resident-session", expiresInSeconds: 3600, resident: { id: "resident-001" } })
-      : await request<ClaimSession>(`/miniapp/invites/${token}/claim`, { method: "POST", body: JSON.stringify({ idToken }) });
+      : await request<ClaimSession>(`/miniapp/invites/${token}/claim`, { method: "POST", body: JSON.stringify(input) });
     if (typeof window !== "undefined") sessionStorage.setItem("resident_access_token", result.accessToken);
     return result;
   },

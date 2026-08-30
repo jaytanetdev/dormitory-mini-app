@@ -45,6 +45,8 @@ export interface ClaimInvite {
   roomNumber: string;
   propertyName: string;
   branchName: string;
+  branchAddress?: string | null;
+  branchPhone?: string | null;
   expiresAt: string;
 }
 
