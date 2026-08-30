@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 const items = [
   { href: "/", label: "หน้าหลัก", icon: Home },
-  { href: "/invoices/inv-2026-08", label: "บิลของฉัน", icon: ReceiptText },
+  { href: "/invoices", label: "บิลของฉัน", icon: ReceiptText },
   { href: "/payments", label: "ประวัติ", icon: History },
 ];
 

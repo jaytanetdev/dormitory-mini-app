@@ -7,13 +7,24 @@ import { ApiClientError, api } from "@/lib/api-client";
 type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "error";
 type LiffState = { ready: boolean; status: AuthStatus; isMock: boolean; hasResidentSession: boolean; displayName: string; idToken?: string; error?: string; login: () => void; retry: () => void };
 const LiffContext = createContext<LiffState | null>(null);
+const LIFF_ID_KEY = "dormitory.active_liff_id";
+
+function resolveLiffId(): string | undefined {
+  if (typeof window === "undefined") return process.env.NEXT_PUBLIC_LIFF_ID;
+  const fromUrl = new URLSearchParams(window.location.search).get("liffId")?.trim();
+  if (fromUrl) {
+    window.sessionStorage.setItem(LIFF_ID_KEY, fromUrl);
+    return fromUrl;
+  }
+  return window.sessionStorage.getItem(LIFF_ID_KEY) || process.env.NEXT_PUBLIC_LIFF_ID;
+}
 
 export function LiffProvider({ children }: { children: React.ReactNode }) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<Omit<LiffState, "login" | "retry">>({ ready: false, status: "loading", isMock: false, hasResidentSession: false, displayName: "" });
   // Branch claim and invoice links include the safe public LIFF ID for that branch.
   // A deployment-wide env value remains a fallback for one-OA installations.
-  const liffId = typeof window === "undefined" ? process.env.NEXT_PUBLIC_LIFF_ID : new URLSearchParams(window.location.search).get("liffId") || process.env.NEXT_PUBLIC_LIFF_ID;
+  const liffId = resolveLiffId();
   const isMock = process.env.NEXT_PUBLIC_MOCK_MODE === "true";
 
   useEffect(() => {

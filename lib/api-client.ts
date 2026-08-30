@@ -31,8 +31,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: { ...(isMultipart ? {} : { "Content-Type": "application/json" }), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init?.headers },
   });
-  const envelope = await response.json().catch(() => null) as (ApiEnvelope<T> & { errors?: Array<{ message?: string }> }) | null;
-  if (!response.ok) throw new ApiClientError(response.status, envelope?.errors?.[0]?.message ?? (response.status === 401 ? "ยังไม่ได้ผูกบัญชี LINE กับห้อง" : response.status === 403 ? "คุณไม่มีสิทธิ์ดูข้อมูลนี้" : "เชื่อมต่อระบบไม่สำเร็จ ลองอีกครั้ง"));
+  const envelope = await response.json().catch(() => null) as (ApiEnvelope<T> & { errors?: Array<{ message?: string }> | { message?: string } }) | null;
+  const apiMessage = Array.isArray(envelope?.errors) ? envelope.errors[0]?.message : envelope?.errors?.message;
+  if (!response.ok) throw new ApiClientError(response.status, apiMessage ?? (response.status === 401 ? "ยังไม่ได้ผูกบัญชี LINE กับห้อง" : response.status === 403 ? "คุณไม่มีสิทธิ์ดูข้อมูลนี้" : "เชื่อมต่อระบบไม่สำเร็จ ลองอีกครั้ง"));
   if (!envelope) throw new ApiClientError(502, "รูปแบบข้อมูลจากระบบไม่ถูกต้อง");
   return envelope.data;
 }

@@ -112,6 +112,10 @@ button { cursor: pointer; }
 .qr-card { padding: 20px; text-align: center; }
 .qr-frame { margin: 16px auto; width: min(100%, 264px); padding: 14px; background: white; border: 1px solid var(--line); border-radius: 20px; }
 .qr-frame img { display: block; width: 100%; height: auto; }
+.payment-qr-error { margin: 16px 0; padding: 14px; text-align: left; color: #a8332a; background: #fff1ef; border: 1px solid #ffd8d3; border-radius: 15px; }
+.payment-qr-error strong { display: block; }
+.payment-qr-error p { margin: 3px 0 5px; font-size: .78rem; font-weight: 700; }
+.payment-qr-error span { display: block; color: #8b5b56; font-size: .7rem; }
 .payee { padding: 12px 14px; background: #f0f4f8; border-radius: 13px; text-align: left; }
 .payee p { margin: 0; }
 .notice { border-left: 4px solid var(--amber); padding: 12px 14px; border-radius: 6px 14px 14px 6px; background: #fff8e9; color: #765217; font-size: .84rem; }
