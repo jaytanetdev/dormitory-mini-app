@@ -20,6 +20,7 @@ interface RawInvoice {
 }
 interface RawInvite { expiresAt: string; room: { number: string }; property: { name: string }; branch?: { name: string; address?: string | null; phone?: string | null }; residentHint?: string; }
 interface RawBranchClaim { branch: { name: string; address?: string | null; phone?: string | null }; line?: { liffId?: string | null; displayName?: string | null }; }
+interface RawMiniHome { profile: RawProfile; invoices: RawInvoice[]; invoice: RawInvoice | null; }
 
 export class ApiClientError extends Error {
   constructor(public readonly status: number, message: string) { super(message); }
@@ -87,6 +88,23 @@ export const api = {
     const contract = raw.contracts[0];
     if (!contract) throw new ApiClientError(404, "ไม่พบสัญญาห้องที่กำลังใช้งาน");
     return { id: raw.id, displayName: raw.fullName, room: { id: contract.room.id, number: contract.room.number, building: contract.room.building.name, branch: raw.branch.name, contractStatus: contract.status } };
+  },
+  home: async (): Promise<{ profile: ResidentProfile; invoice: Invoice; payments: PaymentHistoryItem[] }> => {
+    if (MOCK_MODE) return delay({ profile: mockProfile, invoice: mockInvoices[0], payments: mockPayments });
+    const raw = await request<RawMiniHome>("/miniapp/home");
+    const contract = raw.profile.contracts[0];
+    if (!contract) throw new ApiClientError(404, "ไม่พบสัญญาห้องที่กำลังใช้งาน");
+    if (!raw.invoice) throw new ApiClientError(404, "ยังไม่มีใบแจ้งหนี้");
+    const payments = raw.invoices.flatMap((invoice) => {
+      const approved = (invoice.payments ?? []).reduce((sum, payment) => sum + asNumber(payment.amount), 0);
+      if (approved <= 0) return [];
+      return [{ id: `payment-${invoice.id}`, invoiceId: invoice.id, periodLabel: periodLabel(invoice.period), amount: approved, paidAt: invoice.paidAt ?? undefined, status: "APPROVED" as const }];
+    });
+    return {
+      profile: { id: raw.profile.id, displayName: raw.profile.fullName, room: { id: contract.room.id, number: contract.room.number, building: contract.room.building.name, branch: raw.profile.branch.name, contractStatus: contract.status } },
+      invoice: mapInvoice(raw.invoice),
+      payments,
+    };
   },
   invoices: async (): Promise<Invoice[]> => MOCK_MODE ? delay(mockInvoices) : (await request<RawInvoice[]>("/miniapp/invoices")).map(mapInvoice),
   invoice: (id: string): Promise<Invoice> => {

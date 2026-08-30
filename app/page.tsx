@@ -13,11 +13,7 @@ import type { Invoice, PaymentHistoryItem, ResidentProfile } from "@/lib/types";
 export default function HomePage() {
   const [data, setData] = useState<{ profile: ResidentProfile; invoice: Invoice; payments: PaymentHistoryItem[] }>();
   const [error, setError] = useState<string>();
-  useEffect(() => { void Promise.all([api.profile(), api.invoices(), api.payments()]).then(async ([profile, invoices, payments]) => {
-    if (!invoices[0]) throw new Error("ยังไม่มีใบแจ้งหนี้");
-    const invoice = await api.invoice(invoices[0].id);
-    setData({ profile, invoice, payments });
-  }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "โหลดข้อมูลไม่สำเร็จ")); }, []);
+  useEffect(() => { void api.home().then(setData).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "โหลดข้อมูลไม่สำเร็จ")); }, []);
   if (!data && !error) return <AppLoading />;
   if (error) return <div className="page"><div className="card success-panel"><Bell size={34} /><h1>ดูข้อมูลไม่ได้</h1><p className="muted">{error}</p><button className="primary-button full-width" onClick={() => location.reload()}>ลองอีกครั้ง</button></div></div>;
   if (!data) return null;
