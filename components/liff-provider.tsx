@@ -46,7 +46,7 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
     return () => { active = false; };
   }, [attempt, isMock, liffId]);
 
-  const value = useMemo<LiffState>(() => ({ ...state, login: () => liff.login({ redirectUri: window.location.href }), retry: () => setAttempt((value) => value + 1) }), [state]);
+  const value = useMemo<LiffState>(() => ({ ...state, login: () => liff.login({ redirectUri: window.location.href, scope: "openid profile" }), retry: () => setAttempt((value) => value + 1) }), [state]);
   return <LiffContext.Provider value={value}>{children}</LiffContext.Provider>;
 }
 
