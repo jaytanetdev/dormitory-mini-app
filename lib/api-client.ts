@@ -4,7 +4,6 @@ import type { BranchClaimInfo, ClaimInvite, Invoice, PaymentHistoryItem, Residen
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/v1";
 const MOCK_MODE = process.env.NEXT_PUBLIC_MOCK_MODE === "true";
-const SLIP_UPLOAD_URL = process.env.NEXT_PUBLIC_SLIP_UPLOAD_URL;
 
 interface ResidentSession { accessToken: string; expiresInSeconds: number; }
 interface ClaimSession extends ResidentSession { resident?: { id: string; displayName?: string }; }
@@ -27,9 +26,10 @@ export class ApiClientError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = typeof window === "undefined" ? null : sessionStorage.getItem("resident_access_token");
+  const isMultipart = typeof FormData !== "undefined" && init?.body instanceof FormData;
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init?.headers },
+    headers: { ...(isMultipart ? {} : { "Content-Type": "application/json" }), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init?.headers },
   });
   const envelope = await response.json().catch(() => null) as (ApiEnvelope<T> & { errors?: Array<{ message?: string }> }) | null;
   if (!response.ok) throw new ApiClientError(response.status, envelope?.errors?.[0]?.message ?? (response.status === 401 ? "ยังไม่ได้ผูกบัญชี LINE กับห้อง" : response.status === 403 ? "คุณไม่มีสิทธิ์ดูข้อมูลนี้" : "เชื่อมต่อระบบไม่สำเร็จ ลองอีกครั้ง"));
@@ -116,17 +116,8 @@ export const api = {
   },
   uploadSlip: async (invoiceId: string, file: File, paidAt: string, amount: number): Promise<{ paymentId: string }> => {
     if (MOCK_MODE) return delay({ paymentId: `payment-${invoiceId}` });
-    if (!SLIP_UPLOAD_URL) throw new ApiClientError(503, "ยังไม่ได้ตั้งค่าพื้นที่อัปโหลดสลิป กรุณาติดต่อเจ้าหน้าที่");
-    const upload = new FormData(); upload.append("file", file);
-    const uploadResponse = await fetch(SLIP_UPLOAD_URL, { method: "POST", body: upload });
-    if (!uploadResponse.ok) throw new ApiClientError(uploadResponse.status, "อัปโหลดรูปสลิปไม่สำเร็จ กรุณาลองอีกครั้ง");
-    const uploaded = await uploadResponse.json() as { url?: string; data?: { url?: string } };
-    const fileUrl = uploaded.data?.url ?? uploaded.url;
-    if (!fileUrl) throw new ApiClientError(502, "ระบบจัดเก็บรูปไม่ได้ส่ง URL กลับมา");
-    const payment = await request<{ id?: string; paymentId?: string }>("/miniapp/payments", {
-      method: "POST",
-      body: JSON.stringify({ invoiceId, amount, paidAt, fileUrl, fileName: file.name, mimeType: file.type, size: file.size }),
-    });
+    const upload = new FormData(); upload.append("file", file); upload.append("invoiceId", invoiceId); upload.append("amount", String(amount)); upload.append("paidAt", paidAt);
+    const payment = await request<{ id?: string; paymentId?: string }>("/miniapp/payments/slip", { method: "POST", body: upload, headers: {} });
     return { paymentId: payment.paymentId ?? payment.id ?? "" };
   },
 };
