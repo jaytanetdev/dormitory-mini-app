@@ -9,7 +9,7 @@ interface ResidentSession { accessToken: string; expiresInSeconds: number; }
 interface ClaimSession extends ResidentSession { resident?: { id: string; displayName?: string }; }
 interface RawProfile {
   id: string; fullName: string; branch: { id: string; name: string };
-  contracts: Array<{ room: { id: string; number: string; building: { name: string; property: { name: string } } } }>;
+  contracts: Array<{ status?: string; room: { id: string; number: string; building: { name: string; property: { name: string } } } }>;
 }
 interface RawInvoiceItem { id: string; code: string; description: string; quantity: string | number; unitPrice: string | number; amount: string | number; metadata?: unknown; }
 interface RawInvoice {
@@ -71,7 +71,7 @@ export const api = {
     const raw = await request<RawProfile>("/miniapp/me");
     const contract = raw.contracts[0];
     if (!contract) throw new ApiClientError(404, "ไม่พบสัญญาห้องที่กำลังใช้งาน");
-    return { id: raw.id, displayName: raw.fullName, room: { id: contract.room.id, number: contract.room.number, building: contract.room.building.name, branch: raw.branch.name } };
+    return { id: raw.id, displayName: raw.fullName, room: { id: contract.room.id, number: contract.room.number, building: contract.room.building.name, branch: raw.branch.name, contractStatus: contract.status } };
   },
   invoices: async (): Promise<Invoice[]> => MOCK_MODE ? delay(mockInvoices) : (await request<RawInvoice[]>("/miniapp/invoices")).map(mapInvoice),
   invoice: (id: string): Promise<Invoice> => {

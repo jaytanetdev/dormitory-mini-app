@@ -4,7 +4,7 @@ export interface ResidentProfile {
   id: string;
   displayName: string;
   linePictureUrl?: string;
-  room: { id: string; number: string; building: string; branch: string };
+  room: { id: string; number: string; building: string; branch: string; contractStatus?: string };
 }
 
 export interface MeterCharge {
