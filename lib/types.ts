@@ -1,4 +1,4 @@
-import type { InvoiceStatus } from "@dormitory/contracts";
+import type { InvoiceStatus } from "@/lib/contracts";
 
 export interface ResidentProfile {
   id: string;

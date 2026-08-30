@@ -1,4 +1,4 @@
-import type { ApiEnvelope } from "@dormitory/contracts";
+import type { ApiEnvelope } from "@/lib/contracts";
 import { mockInvite, mockInvoices, mockPayments, mockProfile } from "./mock-data";
 import type { BranchClaimInfo, ClaimInvite, Invoice, PaymentHistoryItem, ResidentProfile } from "./types";
 

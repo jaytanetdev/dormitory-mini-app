@@ -1,4 +1,4 @@
-import type { InvoiceStatus } from "@dormitory/contracts";
+import type { InvoiceStatus } from "@/lib/contracts";
 import { CheckCircle2, Clock3, TriangleAlert } from "lucide-react";
 
 const labels: Record<InvoiceStatus, string> = {
