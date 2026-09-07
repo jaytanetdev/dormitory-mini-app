@@ -26,6 +26,7 @@ export interface Invoice {
   dueAt: string;
   status: InvoiceStatus;
   total: number;
+  outstanding?: number;
   roomNumber: string;
   items: InvoiceItem[];
   meters: MeterCharge[];

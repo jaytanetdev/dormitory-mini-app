@@ -30,7 +30,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = typeof window === "undefined" ? null : sessionStorage.getItem("resident_access_token");
   const isMultipart = typeof FormData !== "undefined" && init?.body instanceof FormData;
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, {
@@ -44,7 +44,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new ApiClientError(503, "เชื่อมต่อระบบรับสลิปไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง");
   } finally {
-    window.clearTimeout(timeout);
+    globalThis.clearTimeout(timeout);
   }
   const envelope = await response.json().catch(() => null) as (ApiEnvelope<T> & { errors?: Array<{ message?: string } | string> | { message?: string } | string }) | null;
   const firstError = Array.isArray(envelope?.errors) ? envelope.errors[0] : envelope?.errors;
@@ -60,11 +60,23 @@ const periodLabel = (period: { year: number; month: number }) => `${thaiMonths[p
 const asNumber = (value: string | number) => typeof value === "number" ? value : Number(value);
 const metadataRecord = (value: unknown): Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 
+function mapPayments(invoice: RawInvoice): PaymentHistoryItem[] {
+  return (invoice.payments ?? []).map((payment, index) => ({
+    id: payment.id ?? invoice.id + '-' + index, invoiceId: invoice.id,
+    periodLabel: periodLabel(invoice.period), amount: asNumber(payment.amount),
+    paidAt: payment.paidAt, status: payment.status ?? "APPROVED",
+  }));
+}
+
 function mapInvoice(raw: RawInvoice): Invoice {
+  const payments = mapPayments(raw);
+  const approved = payments.filter((payment) => payment.status === "APPROVED").reduce((sum, payment) => sum + payment.amount, 0);
+  const pending = payments.some((payment) => payment.status === "PENDING");
+  const status = ["PAID", "VOID", "DRAFT"].includes(raw.status) ? raw.status : pending ? "PENDING_REVIEW" : raw.status;
   const rawItems = raw.items ?? [];
   const meterItems = rawItems.filter((item) => item.code === "WATER" || item.code === "ELECTRIC");
   return {
-    id: raw.id, number: raw.number, status: raw.status, total: asNumber(raw.total), dueAt: raw.dueDate,
+    id: raw.id, number: raw.number, status, outstanding: raw.status === "PAID" ? 0 : Math.max(0, asNumber(raw.total) - approved), total: asNumber(raw.total), dueAt: raw.dueDate,
     issuedAt: raw.issuedAt ?? raw.dueDate, roomNumber: raw.room.number, periodLabel: periodLabel(raw.period),
     items: rawItems.filter((item) => item.code !== "WATER" && item.code !== "ELECTRIC").map((item) => ({ id: item.id, label: item.description, amount: asNumber(item.amount) })),
     meters: meterItems.map((item) => {
@@ -95,11 +107,7 @@ export const api = {
     const contract = raw.profile.contracts[0];
     if (!contract) throw new ApiClientError(404, "ไม่พบสัญญาห้องที่กำลังใช้งาน");
     if (!raw.invoice) throw new ApiClientError(404, "ยังไม่มีใบแจ้งหนี้");
-    const payments = raw.invoices.flatMap((invoice) => {
-      const approved = (invoice.payments ?? []).reduce((sum, payment) => sum + asNumber(payment.amount), 0);
-      if (approved <= 0) return [];
-      return [{ id: `payment-${invoice.id}`, invoiceId: invoice.id, periodLabel: periodLabel(invoice.period), amount: approved, paidAt: invoice.paidAt ?? undefined, status: "APPROVED" as const }];
-    });
+    const payments = raw.invoices.flatMap(mapPayments);
     return {
       profile: { id: raw.profile.id, displayName: raw.profile.fullName, room: { id: contract.room.id, number: contract.room.number, building: contract.room.building.name, branch: raw.profile.branch.name, contractStatus: contract.status } },
       invoice: mapInvoice(raw.invoice),
@@ -118,11 +126,7 @@ export const api = {
   payments: async (): Promise<PaymentHistoryItem[]> => {
     if (MOCK_MODE) return delay(mockPayments);
     const invoices = await request<RawInvoice[]>("/miniapp/invoices");
-    return invoices.flatMap((invoice) => {
-      const approved = (invoice.payments ?? []).reduce((sum, payment) => sum + asNumber(payment.amount), 0);
-      if (approved <= 0) return [];
-      return [{ id: `payment-${invoice.id}`, invoiceId: invoice.id, periodLabel: periodLabel(invoice.period), amount: approved, paidAt: invoice.paidAt ?? undefined, status: "APPROVED" as const }];
-    });
+    return invoices.flatMap(mapPayments);
   },
   invite: async (token: string): Promise<ClaimInvite> => {
     if (MOCK_MODE) return delay({ ...mockInvite, token });
@@ -149,7 +153,13 @@ export const api = {
     return result;
   },
   uploadSlip: async (invoiceId: string, file: File, paidAt: string, amount: number): Promise<{ paymentId: string }> => {
-    if (MOCK_MODE) return delay({ paymentId: `payment-${invoiceId}` });
+    if (MOCK_MODE) {
+      const invoice = mockInvoices.find((item) => item.id === invoiceId);
+      if (invoice) invoice.status = "PENDING_REVIEW";
+      const paymentId = 'payment-' + invoiceId + '-' + Date.now();
+      mockPayments.unshift({ id: paymentId, invoiceId, periodLabel: invoice?.periodLabel ?? "", amount, paidAt, status: "PENDING" });
+      return delay({ paymentId });
+    }
     const upload = new FormData(); upload.append("file", file); upload.append("invoiceId", invoiceId); upload.append("amount", String(amount)); upload.append("paidAt", paidAt);
     const payment = await request<{ id?: string; paymentId?: string }>("/miniapp/payments/slip", { method: "POST", body: upload, headers: {} });
     return { paymentId: payment.paymentId ?? payment.id ?? "" };

@@ -2,10 +2,11 @@
 
 import { ArrowLeft, ChevronRight, ReceiptText } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { AppLoading } from "@/components/app-loading";
 import { BottomNav } from "@/components/bottom-nav";
 import { StatusPill } from "@/components/status-pill";
+import { useResidentRefresh } from "@/lib/use-resident-refresh";
 import { api } from "@/lib/api-client";
 import { formatBaht, formatThaiDate } from "@/lib/format";
 import type { Invoice } from "@/lib/types";
@@ -14,11 +15,9 @@ export default function InvoicesPage() {
   const [items, setItems] = useState<Invoice[]>();
   const [error, setError] = useState<string>();
 
-  useEffect(() => {
-    void api.invoices()
-      .then(setItems)
-      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "โหลดรายการบิลไม่สำเร็จ"));
-  }, []);
+  const handleError = useCallback((reason: unknown) => setError(reason instanceof Error ? reason.message : "โหลดข้อมูลไม่สำเร็จ"), []);
+  const handleData = useCallback((value: Awaited<ReturnType<typeof api.invoices>>) => { setItems(value); setError(undefined); }, []);
+  useResidentRefresh(api.invoices, handleData, handleError);
 
   if (!items && !error) return <AppLoading />;
 
