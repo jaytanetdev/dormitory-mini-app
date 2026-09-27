@@ -1,6 +1,5 @@
 "use client";
-
-import { ArrowLeft, Bolt, Droplets } from "lucide-react";
+import { ArrowLeft, Bolt, Droplets, ReceiptText } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -9,25 +8,207 @@ import { BottomNav } from "@/components/bottom-nav";
 import { StatusPill } from "@/components/status-pill";
 import { useResidentRefresh } from "@/lib/use-resident-refresh";
 import { api } from "@/lib/api-client";
-import { balanceDue } from "@/lib/resident-billing";
+import { balanceDue, needsPayment } from "@/lib/resident-billing";
 import { formatBaht, formatThaiDate } from "@/lib/format";
 import type { Invoice } from "@/lib/types";
-
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const [invoice, setInvoice] = useState<Invoice>();
   const [error, setError] = useState<string>();
   const load = useCallback(() => api.invoice(id), [id]);
-  const onData = useCallback((value: Invoice) => { setInvoice(value); setError(undefined); }, []);
-  const onError = useCallback((reason: unknown) => setError(reason instanceof Error ? reason.message : "โหลดบิลไม่สำเร็จ"), []);
+  const onData = useCallback((value: Invoice) => {
+    setInvoice(value);
+    setError(undefined);
+  }, []);
+  const onError = useCallback(
+    (reason: unknown) =>
+      setError(reason instanceof Error ? reason.message : "โหลดบิลไม่สำเร็จ"),
+    [],
+  );
   useResidentRefresh(load, onData, onError);
-  if (error && !invoice) return <div className="page"><p role="alert" className="error-text">{error}</p><Link href="/invoices" className="secondary-button full-width">กลับไปที่บิลของฉัน</Link></div>;
+  if (error && !invoice)
+    return (
+      <div className="page">
+        <p role="alert" className="error-text">
+          {error}
+        </p>
+        <Link href="/invoices" className="secondary-button full-width">
+          กลับไปที่บิลของฉัน
+        </Link>
+      </div>
+    );
   if (!invoice) return <AppLoading />;
-  return <><div className="page"><header className="page-head"><Link href="/invoices" className="back-link" aria-label="กลับไปที่บิลของฉัน"><ArrowLeft size={20} /></Link><div style={{ flex: 1 }}><p className="eyebrow">ใบแจ้งหนี้</p><h1 className="page-title">รายละเอียดบิล</h1></div></header>
-    <section className="card invoice-hero"><div className="invoice-hero-top"><div><p className="eyebrow">{invoice.number}</p><h2>{invoice.periodLabel}</h2><p className="muted small">ห้อง {invoice.roomNumber} · ครบกำหนด {formatThaiDate(invoice.dueAt)}</p></div><StatusPill status={invoice.status} /></div><div className="invoice-total"><span className="muted">ยอดสุทธิ</span><strong>฿{formatBaht(invoice.total)}</strong></div></section>
-    {invoice.status === "PENDING_REVIEW" && <p className="payment-state-note" role="status">ได้รับสลิปแล้ว กำลังรอเจ้าหน้าที่ตรวจสอบ ไม่ต้องโอนซ้ำ</p>}<section className="section"><div className="section-heading"><h2>ค่าใช้จ่ายประจำ</h2></div><div className="card ledger">{invoice.items.map((item) => <div className="ledger-row" key={item.id}><p>{item.label}</p><p className="ledger-value">฿{formatBaht(item.amount)}</p></div>)}</div></section>
-    <section className="section"><div className="section-heading"><h2>มิเตอร์เดือนนี้</h2></div>{invoice.meters.map((meter) => <div className="card meter-wrap" style={{ marginBottom: 10 }} key={meter.type}><div className="ledger-label" style={{ padding: "5px 0" }}><span className={`icon-box ${meter.type === "WATER" ? "teal" : ""}`}>{meter.type === "WATER" ? <Droplets size={18} /> : <Bolt size={18} />}</span><strong>{meter.type === "WATER" ? "น้ำประปา" : "ไฟฟ้า"}</strong></div><table className="meter-table"><thead><tr><th>มิเตอร์</th><th>ก่อน</th><th>ล่าสุด</th><th>หน่วย</th><th>บาท/หน่วย</th></tr></thead><tbody><tr><td>{meter.type === "WATER" ? "น้ำ" : "ไฟ"}</td><td>{meter.previous}</td><td>{meter.current}</td><td>{meter.units}</td><td>{meter.rate}</td></tr></tbody></table><div className="ledger-row" style={{ padding: "13px 2px 2px" }}><strong>รวม{meter.type === "WATER" ? "ค่าน้ำ" : "ค่าไฟ"}</strong><strong>฿{formatBaht(meter.amount)}</strong></div></div>)}</section>
-    <section className="section"><div className="section-heading"><h2>การชำระบิลนี้</h2><Link className="text-link" href="/payments">ประวัติทั้งหมด</Link></div><div className="card ledger"><div className="ledger-row"><span>ยอดคงเหลือ</span><strong>฿{formatBaht(balanceDue(invoice))}</strong></div>{invoice.payments?.length ? invoice.payments.map(payment=><div className="resident-payment-detail" key={payment.id}><div className="payment-history-top"><strong>฿{formatBaht(payment.amount)}</strong><span className={"status-pill "+(payment.status === "APPROVED" ? "paid" : payment.status === "REJECTED" ? "overdue" : "pending")}>{payment.status === "APPROVED" ? "ตรวจผ่านแล้ว" : payment.status === "REJECTED" ? "สลิปไม่ผ่าน" : "รอตรวจสอบ"}</span></div><p className="muted small">{payment.paidAt ? "โอน "+formatThaiDate(payment.paidAt) : "ไม่ระบุวันโอน"}</p>{payment.rejectReason && <p className="error-text">เหตุผล: {payment.rejectReason}</p>}{payment.receiptNumber && <p className="small">ใบเสร็จ {payment.receiptNumber}</p>}{payment.slipUrl && <a href={payment.slipUrl} target="_blank" rel="noopener noreferrer" className="text-link">เปิดสลิปที่ส่ง</a>}</div>) : <p className="muted small" style={{padding:16}}>ยังไม่มีการส่งสลิปสำหรับบิลนี้</p>}</div></section>
-    {["ISSUED", "PENDING_PAYMENT", "PARTIALLY_PAID", "OVERDUE", "REJECTED"].includes(invoice.status) && <Link href={`/pay/${invoice.id}`} className="primary-button full-width" style={{ marginTop: 22 }}>ชำระ ฿{formatBaht(invoice.outstanding ?? invoice.total)}</Link>}
-  </div><BottomNav /></>;
+  return (
+    <>
+      <div className="page resident-invoice">
+        <header className="page-head">
+          <Link
+            href="/invoices"
+            className="back-link"
+            aria-label="กลับไปที่บิลของฉัน"
+          >
+            <ArrowLeft size={20} />
+          </Link>
+          <div>
+            <h1 className="page-title">รายละเอียดบิล</h1>
+            <p className="muted small">ห้อง {invoice.roomNumber}</p>
+          </div>
+        </header>
+        <section className="card invoice-hero">
+          <div className="invoice-hero-top">
+            <div>
+              <h2>{invoice.periodLabel}</h2>
+              <p className="muted small">{invoice.number}</p>
+            </div>
+            <StatusPill status={invoice.status} />
+          </div>
+          <div className="invoice-total">
+            <span className="muted">ยอดบิล</span>
+            <strong>฿{formatBaht(invoice.total)}</strong>
+          </div>
+          <p className="invoice-due">
+            ครบกำหนด {formatThaiDate(invoice.dueAt)}
+          </p>
+          {needsPayment(invoice) && (
+            <Link
+              href={"/pay/" + invoice.id}
+              className="primary-button full-width"
+            >
+              ชำระ ฿{formatBaht(balanceDue(invoice))}
+            </Link>
+          )}
+          {invoice.status === "PENDING_REVIEW" && (
+            <a className="secondary-button full-width" href="#bill-payments">
+              ดูสลิปที่ส่ง
+            </a>
+          )}
+        </section>
+        {invoice.status === "PENDING_REVIEW" && (
+          <p className="payment-state-note" role="status">
+            ได้รับสลิปแล้ว รอเจ้าหน้าที่ตรวจสอบ ไม่ต้องโอนซ้ำ
+          </p>
+        )}
+        <section className="section">
+          <div className="section-heading">
+            <h2>ค่าเช่าและบริการ</h2>
+          </div>
+          <div className="card ledger">
+            {invoice.items.map((item) => (
+              <div className="ledger-row" key={item.id}>
+                <span>{item.label}</span>
+                <strong>฿{formatBaht(item.amount)}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+        {invoice.meters.length > 0 && (
+          <section className="section">
+            <div className="section-heading">
+              <h2>ค่าน้ำและค่าไฟ</h2>
+            </div>
+            <div className="resident-meter-list">
+              {invoice.meters.map((meter) => (
+                <div className="card resident-meter" key={meter.type}>
+                  <div className="resident-meter-top">
+                    <span
+                      className={
+                        "icon-box " + (meter.type === "WATER" ? "teal" : "")
+                      }
+                    >
+                      {meter.type === "WATER" ? (
+                        <Droplets size={20} />
+                      ) : (
+                        <Bolt size={20} />
+                      )}
+                    </span>
+                    <div>
+                      <strong>
+                        {meter.type === "WATER" ? "ค่าน้ำ" : "ค่าไฟ"}
+                      </strong>
+                      <p>
+                        {meter.units} หน่วย × ฿{meter.rate}
+                      </p>
+                    </div>
+                    <b>฿{formatBaht(meter.amount)}</b>
+                  </div>
+                  <details>
+                    <summary>ดูเลขมิเตอร์</summary>
+                    <dl>
+                      <div>
+                        <dt>ครั้งก่อน</dt>
+                        <dd>{meter.previous}</dd>
+                      </div>
+                      <div>
+                        <dt>ครั้งล่าสุด</dt>
+                        <dd>{meter.current}</dd>
+                      </div>
+                    </dl>
+                  </details>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+        <section className="section" id="bill-payments">
+          <div className="section-heading">
+            <h2>การชำระบิลนี้</h2>
+            <Link className="text-link" href="/payments">
+              ประวัติทั้งหมด
+            </Link>
+          </div>
+          <div className="card ledger">
+            <div className="ledger-row invoice-balance">
+              <span>ยอดคงเหลือ</span>
+              <strong>฿{formatBaht(balanceDue(invoice))}</strong>
+            </div>
+            {invoice.payments?.length ? (
+              invoice.payments.map((payment) => (
+                <div className="resident-payment-detail" key={payment.id}>
+                  <div className="payment-history-top">
+                    <strong>฿{formatBaht(payment.amount)}</strong>
+                    <StatusPill
+                      status={
+                        payment.status === "APPROVED"
+                          ? "PAID"
+                          : payment.status === "REJECTED"
+                            ? "REJECTED"
+                            : "PENDING_REVIEW"
+                      }
+                    />
+                  </div>
+                  <p className="muted small">
+                    {payment.paidAt
+                      ? "โอน " + formatThaiDate(payment.paidAt)
+                      : "ไม่ระบุวันโอน"}
+                  </p>
+                  {payment.rejectReason && (
+                    <p className="error-text">เหตุผล: {payment.rejectReason}</p>
+                  )}
+                  {payment.receiptNumber && (
+                    <p className="small">ใบเสร็จ {payment.receiptNumber}</p>
+                  )}
+                  {payment.slipUrl && (
+                    <a
+                      href={payment.slipUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-link"
+                    >
+                      เปิดสลิปที่ส่ง
+                    </a>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="resident-empty-note">
+                <ReceiptText size={22} />
+                <p>ยังไม่มีการส่งสลิปสำหรับบิลนี้</p>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+      <BottomNav />
+    </>
+  );
 }

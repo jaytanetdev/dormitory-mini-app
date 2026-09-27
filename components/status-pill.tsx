@@ -2,7 +2,7 @@ import type { InvoiceStatus } from "@/lib/contracts";
 import { CheckCircle2, Clock3, TriangleAlert } from "lucide-react";
 
 const labels: Record<InvoiceStatus, string> = {
-  DRAFT: "ฉบับร่าง", ISSUED: "ออกบิลแล้ว", PENDING_PAYMENT: "รอชำระ", PENDING_REVIEW: "กำลังตรวจสลิป",
+  DRAFT: "ฉบับร่าง", ISSUED: "รอชำระ", PENDING_PAYMENT: "รอชำระ", PENDING_REVIEW: "กำลังตรวจสลิป",
   PARTIALLY_PAID: "ชำระบางส่วน", PAID: "ชำระแล้ว", OVERDUE: "เกินกำหนด", REJECTED: "สลิปไม่ผ่าน", VOID: "ยกเลิก",
 };
 

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./theme.css";
+import "./usability.css";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LiffProvider } from "@/components/liff-provider";
 import { ResidentGate } from "@/components/resident-gate";

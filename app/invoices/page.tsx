@@ -34,14 +34,14 @@ export default function InvoicesPage() {
   );
   return (
     <>
-      <div className="page">
+      <div className="page resident-bills">
         <header className="page-head">
           <Link href="/" className="back-link" aria-label="กลับหน้าหลัก">
             <ArrowLeft size={20} />
           </Link>
           <div>
             <h1 className="page-title">บิลของฉัน</h1>
-            <p className="muted small">เลือกบิลเพื่อดูรายละเอียดหรือชำระเงิน</p>
+            <p className="muted small">ดูยอดค้างและเลือกบิลที่ต้องการชำระ</p>
           </div>
         </header>
         {error && (
@@ -54,15 +54,15 @@ export default function InvoicesPage() {
         )}
         <section className="card history-summary">
           <div>
-            <span>ยอดคงเหลือทุกบิล</span>
+            <span>ยอดค้างทั้งหมด</span>
             <strong>฿{formatBaht(outstanding)}</strong>
           </div>
-          <p>หักยอดที่เจ้าหน้าที่อนุมัติแล้ว</p>
+          <p>{all.filter(item => balanceDue(item) > 0).length} บิลที่ยังชำระไม่ครบ</p>
         </section>
         <div className="resident-filters" aria-label="กรองบิล">
           {[
-            { key: "DUE", label: "ยังชำระไม่ครบ" },
-            { key: "PAID", label: "ชำระครบแล้ว" },
+            { key: "DUE", label: "ค้างชำระ" },
+            { key: "PAID", label: "ชำระแล้ว" },
             { key: "ALL", label: "ทั้งหมด" },
           ].map((item) => (
             <button
@@ -77,7 +77,7 @@ export default function InvoicesPage() {
         {visible.length ? (
           <div className="history-list">
             {visible.map((invoice) => (
-              <article className="card payment-history-row" key={invoice.id}>
+              <article className="card payment-history-row resident-bill-card" key={invoice.id}>
                 <div className="payment-history-top">
                   <strong>{invoice.periodLabel}</strong>
                   <StatusPill status={invoice.status} />

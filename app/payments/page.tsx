@@ -49,7 +49,7 @@ export default function PaymentsPage() {
           </Link>
           <div>
             <h1 className="page-title">ประวัติการชำระ</h1>
-            <p className="muted small">ดูผลตรวจสลิปและบิลที่ชำระในแต่ละครั้ง</p>
+            <p className="muted small">ติดตามผลตรวจสลิปและดูใบเสร็จ</p>
           </div>
         </header>
         {error && (
@@ -62,7 +62,7 @@ export default function PaymentsPage() {
         )}
         <section className="card history-summary">
           <div>
-            <span>ยอดที่ตรวจผ่านแล้ว</span>
+            <span>ชำระแล้วทั้งหมด</span>
             <strong>
               ฿
               {formatBaht(
@@ -103,7 +103,7 @@ export default function PaymentsPage() {
           />
         </label>
         <p className="history-count">
-          {visible.length} รายการ · เรียงตามวันที่ส่งสลิปล่าสุด
+          {visible.length} รายการ · ล่าสุดก่อน
         </p>
         {visible.length ? (
           <div className="history-list">
@@ -150,7 +150,7 @@ export default function PaymentsPage() {
                       : (payment.invoiceNumber ?? "รายละเอียดการชำระ")}
                   </span>
                   <span>
-                    ดูบิลและผลตรวจ <ChevronRight size={15} />
+                    ดูรายละเอียด <ChevronRight size={15} />
                   </span>
                 </div>
               </Link>
