@@ -2,6 +2,7 @@
 import {
   ArrowUpRight,
   Banknote,
+  CalendarDays,
   Bell,
   Bolt,
   ChevronRight,
@@ -70,7 +71,7 @@ export default function HomePage() {
       <div className="page resident-home">
         <header className="resident-room-head">
           <div>
-            <p>{data.profile.displayName}</p>
+            <p>สวัสดี, {data.profile.displayName}</p>
             <h1>ห้อง {data.profile.room.number}</h1>
             <span>{data.profile.room.branch}</span>
           </div>
@@ -87,10 +88,15 @@ export default function HomePage() {
             aria-label="บิลที่ต้องดูแล"
           >
             <div className="resident-focus-top">
-              <span>{invoice.periodLabel}</span>
+              <span className="focus-period">
+                <CalendarDays size={17} />
+                {invoice.periodLabel}
+              </span>
               <StatusPill status={invoice.status} />
             </div>
-            <p className="resident-focus-label">ยอดคงเหลือ</p>
+            <p className="resident-focus-label">
+              {invoice.status === "PAID" ? "ยอดคงเหลือ" : "ยอดที่ต้องชำระ"}
+            </p>
             <strong className="resident-focus-amount">
               ฿{formatBaht(balanceDue(invoice))}
             </strong>
@@ -104,7 +110,7 @@ export default function HomePage() {
             {needsPayment(invoice) ? (
               <Link href={"/pay/" + invoice.id} className="focus-pay-button">
                 <Banknote size={19} />
-                ชำระบิลนี้
+                ชำระเงิน
                 <ArrowUpRight size={19} />
               </Link>
             ) : (

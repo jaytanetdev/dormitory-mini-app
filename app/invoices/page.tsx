@@ -57,7 +57,10 @@ export default function InvoicesPage() {
             <span>ยอดค้างทั้งหมด</span>
             <strong>฿{formatBaht(outstanding)}</strong>
           </div>
-          <p>{all.filter(item => balanceDue(item) > 0).length} บิลที่ยังชำระไม่ครบ</p>
+          <p>
+            {all.filter((item) => balanceDue(item) > 0).length}{" "}
+            บิลที่ยังชำระไม่ครบ
+          </p>
         </section>
         <div className="resident-filters" aria-label="กรองบิล">
           {[
@@ -77,7 +80,10 @@ export default function InvoicesPage() {
         {visible.length ? (
           <div className="history-list">
             {visible.map((invoice) => (
-              <article className="card payment-history-row resident-bill-card" key={invoice.id}>
+              <article
+                className="card payment-history-row resident-bill-card"
+                key={invoice.id}
+              >
                 <div className="payment-history-top">
                   <strong>{invoice.periodLabel}</strong>
                   <StatusPill status={invoice.status} />
@@ -118,7 +124,7 @@ export default function InvoicesPage() {
                       href={"/pay/" + invoice.id}
                       className="primary-button"
                     >
-                      ชำระบิลนี้
+                      ชำระเงิน
                     </Link>
                   )}
                 </div>

@@ -2,7 +2,7 @@
 import { ArrowLeft, Bolt, Droplets, ReceiptText } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppLoading } from "@/components/app-loading";
 import { BottomNav } from "@/components/bottom-nav";
 import { StatusPill } from "@/components/status-pill";
@@ -26,6 +26,13 @@ export default function InvoicePage() {
     [],
   );
   useResidentRefresh(load, onData, onError);
+  useEffect(() => {
+    if (invoice?.id && window.location.hash === "#bill-payments") {
+      document
+        .getElementById("bill-payments")
+        ?.scrollIntoView({ block: "start" });
+    }
+  }, [invoice?.id]);
   if (error && !invoice)
     return (
       <div className="page">

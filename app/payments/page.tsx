@@ -102,15 +102,16 @@ export default function PaymentsPage() {
             onChange={(event) => setSearch(event.target.value)}
           />
         </label>
-        <p className="history-count">
-          {visible.length} รายการ · ล่าสุดก่อน
-        </p>
+        <p className="history-count">{visible.length} รายการ · ล่าสุดก่อน</p>
         {visible.length ? (
           <div className="history-list">
             {visible.map((payment) => (
               <Link
-                href={"/invoices/" + payment.invoiceId}
-                className="card payment-history-row"
+                href={"/invoices/" + payment.invoiceId + "#bill-payments"}
+                className={
+                  "card payment-history-row history-entry " +
+                  payment.status.toLowerCase()
+                }
                 key={payment.id}
               >
                 <div className="payment-history-top">
@@ -147,10 +148,11 @@ export default function PaymentsPage() {
                   <span>
                     {payment.receiptNumber
                       ? "ใบเสร็จ " + payment.receiptNumber
-                      : (payment.invoiceNumber ?? "รายละเอียดการชำระ")}
+                      : (payment.invoiceNumber ?? "")}
                   </span>
                   <span>
-                    ดูรายละเอียด <ChevronRight size={15} />
+                    {payment.receiptNumber ? "ดูเลขใบเสร็จ" : "ดูการชำระ"}{" "}
+                    <ChevronRight size={15} />
                   </span>
                 </div>
               </Link>

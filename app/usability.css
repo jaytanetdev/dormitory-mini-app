@@ -1,20 +1,20 @@
 /* A small, focused bill wallet for residents. */
 :root {
-  --porcelain: #f1eee9;
-  --paper: #fffcf7;
+  --porcelain: #f5f3ef;
+  --paper: #fffefa;
   --soft: #f5eee6;
   --shadow: 0 3px 14px #24302706;
   --ink: #424854;
   --muted: #69717e;
-  --line: #ddd5cb;
+  --line: #e5e0d9;
   --blue: #c34415;
   --accent: #e46a2e;
   --teal: #397e69;
   --coral: #a64e63;
   --amber: #916923;
   --partial: #76668f;
-  --orange-soft: #ffead8;
-  --action: #c34415;
+  --orange-soft: #fff0e4;
+  --action: #cf450c;
   --action-hover: #ae360e;
   --action-ink: #fff5e9;
   --tooltip: #382c24;
@@ -188,56 +188,67 @@ body {
   border-radius: 15px;
 }
 .resident-focus-card {
-  background: #97431f;
-  color: var(--action-ink);
-  border-radius: 19px;
-  padding: 22px;
-  box-shadow: 0 8px 20px #a53c0d12;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--accent);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 8px 24px #492a1010;
 }
 .resident-focus-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
-.resident-focus-top > span:first-child {
+.focus-period {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
 }
-.resident-focus-card .status-pill {
-  background: #ffffff24;
-  color: var(--action-ink);
+.focus-period svg {
+  color: var(--blue);
 }
 .resident-focus-label {
-  font-size: 12px;
-  color: #e8cfb7;
-  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 3px;
 }
 .resident-focus-amount {
   display: block;
-  font-size: 37px;
-  letter-spacing: -1.4px;
+  color: var(--ink);
+  font-size: 40px;
+  letter-spacing: -1.5px;
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: 750;
   line-height: 1.35;
 }
 .resident-focus-due {
-  margin: 8px 0 22px;
-  font-size: 12px;
-  color: #e8cfb7;
+  margin: 7px 0 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px dashed var(--line);
+  font-size: 13px;
+  color: var(--muted);
 }
 .focus-pay-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  border-radius: 11px;
-  background: var(--paper);
-  color: var(--blue);
-  font-size: 14px;
+  gap: 10px;
+  padding: 0 16px;
+  min-height: 50px;
+  border-radius: 14px;
+  background: var(--action);
+  color: var(--action-ink);
+  font-size: 15px;
   font-weight: 650;
+}
+.focus-pay-button:hover {
+  background: var(--action-hover);
 }
 .focus-pay-button svg:last-child {
   margin-left: auto;
@@ -245,22 +256,8 @@ body {
 .focus-pay-button svg:first-child {
   margin-right: auto;
 }
-.focus-pay-button {
-  padding: 0 16px;
-}
 .resident-focus-card.settled {
-  color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  box-shadow: none;
-}
-.resident-focus-card.settled .resident-focus-label,
-.resident-focus-card.settled .resident-focus-due {
-  color: var(--muted);
-}
-.resident-focus-card.settled .status-pill {
-  background: color-mix(in srgb, var(--teal) 12%, var(--paper));
-  color: var(--teal);
+  border-top-color: var(--teal);
 }
 .resident-focus-card.settled .focus-pay-button {
   background: var(--soft);
@@ -764,9 +761,182 @@ body {
   }
 }
 
-:root[data-theme="dark"] .resident-focus-card:not(.settled) {
-  background: #713e29;
+:root[data-theme="dark"] .resident-focus-card {
+  box-shadow: none;
 }
 .primary-button {
   color: var(--action-ink);
+}
+
+/* Resident wallet: one clear payment action, compact lists, and quiet surfaces. */
+.resident-room-head {
+  margin-bottom: 18px;
+}
+.resident-room-head h1 {
+  font-size: 25px;
+}
+.resident-room-head .resident-room-icon {
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+.appearance-bar {
+  padding: 12px 20px;
+}
+.appearance-bar small {
+  color: var(--muted);
+}
+.theme-toggle {
+  border-radius: 99px;
+}
+.resident-shortcuts {
+  gap: 12px;
+  margin-top: 16px;
+}
+.resident-shortcuts a {
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  padding: 14px 12px;
+  gap: 9px;
+  border-radius: 16px;
+}
+.resident-shortcuts .shortcut-icon {
+  grid-column: auto;
+  width: 32px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--orange-soft);
+}
+.resident-shortcuts strong {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.resident-shortcuts > a > svg {
+  display: none;
+}
+.resident-costs {
+  box-shadow: none;
+}
+.resident-costs .ledger-label svg {
+  padding: 5px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--orange-soft);
+}
+.resident-costs .ledger-row {
+  padding: 12px 14px;
+}
+.resident-history .history-summary,
+.resident-bills .history-summary {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 0 20px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.history-summary strong {
+  font-size: 33px;
+  color: var(--ink);
+}
+.resident-bills .history-summary strong {
+  color: var(--blue);
+}
+.resident-filters {
+  background: transparent;
+  padding: 0;
+  gap: 6px;
+  margin-top: 16px;
+}
+.resident-filters button {
+  min-height: 44px;
+  background: var(--soft);
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+.resident-filters button[aria-pressed="true"] {
+  background: var(--orange-soft);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+  box-shadow: none;
+}
+.resident-search {
+  border-radius: 14px;
+  min-height: 48px;
+}
+.history-list {
+  gap: 10px;
+}
+.resident-history .history-entry {
+  position: relative;
+  border-radius: 16px;
+  padding: 17px 17px 15px 21px;
+  box-shadow: none;
+}
+.history-entry::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 19px;
+  bottom: 19px;
+  width: 3px;
+  background: var(--amber);
+  border-radius: 0 3px 3px 0;
+}
+.history-entry.approved::before {
+  background: var(--teal);
+}
+.history-entry.rejected::before {
+  background: var(--coral);
+}
+.payment-history-top b {
+  font-size: 17px;
+}
+.payment-history-foot {
+  border: 0;
+  padding-top: 0;
+  margin-top: 12px;
+}
+.payment-history-foot > span:first-child:empty {
+  display: none;
+}
+.payment-history-foot > span:last-child {
+  margin-left: auto;
+  min-height: 24px;
+  font-size: 11px;
+}
+.resident-bill-card {
+  border-radius: 19px;
+  padding: 20px;
+  box-shadow: none;
+}
+.resident-bill-balance {
+  padding: 15px 0 9px;
+}
+.resident-bill-actions {
+  border-top: 1px dashed var(--line);
+  padding-top: 15px;
+}
+.bottom-nav {
+  padding-top: 9px;
+  box-shadow: 0 -6px 24px #30201006;
+}
+.nav-item {
+  border-radius: 14px;
+  font-size: 11px;
+}
+@media (max-width: 360px) {
+  .resident-focus-amount {
+    font-size: 34px;
+  }
+  .resident-shortcuts a {
+    padding: 12px 10px;
+    gap: 6px;
+  }
+  .resident-shortcuts strong {
+    font-size: 11px;
+  }
 }
