@@ -1,21 +1,21 @@
 /* A small, focused bill wallet for residents. */
 :root {
-  --porcelain: #ebe7e1;
-  --paper: #f8f5ef;
-  --soft: #f0eae2;
+  --porcelain: #f1eee9;
+  --paper: #fffcf7;
+  --soft: #f5eee6;
   --shadow: 0 3px 14px #24302706;
-  --ink: #332d28;
-  --muted: #74695f;
+  --ink: #424854;
+  --muted: #69717e;
   --line: #ddd5cb;
-  --blue: #aa461b;
-  --accent: #d1763c;
+  --blue: #c34415;
+  --accent: #e46a2e;
   --teal: #397e69;
   --coral: #a64e63;
   --amber: #916923;
   --partial: #76668f;
-  --orange-soft: #f3e2cf;
-  --action: #aa461b;
-  --action-hover: #903815;
+  --orange-soft: #ffead8;
+  --action: #c34415;
+  --action-hover: #ae360e;
   --action-ink: #fff5e9;
   --tooltip: #382c24;
   --tooltip-ink: #faf0e3;
