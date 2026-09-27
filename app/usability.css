@@ -1,31 +1,47 @@
 /* A small, focused bill wallet for residents. */
 :root {
-  --porcelain: #f5f6f8;
-  --paper: #fff;
-  --ink: #202733;
-  --muted: #747d8c;
-  --line: #e7ebf0;
-  --blue: #bf4510;
-  --teal: #16816a;
-  --coral: #ca4260;
-  --amber: #a66e10;
-  --soft: #f6f7f9;
-  --orange-soft: #fff0e7;
-  --shadow: 0 3px 14px #18243804;
+  --porcelain: #d7d9d2;
+  --paper: #e6e7e1;
+  --soft: #dde0d7;
+  --shadow: 0 3px 14px #24302706;
+  --ink: #27322e;
+  --muted: #58655d;
+  --line: #c6cbc0;
+  --blue: #a2461c;
+  --accent: #b96739;
+  --teal: #397e69;
+  --coral: #a64e63;
+  --amber: #916923;
+  --partial: #76668f;
+  --orange-soft: #e3d7c6;
+  --action: #a2461c;
+  --action-hover: #873815;
+  --action-ink: #f3eee5;
+  --tooltip: #2b382f;
+  --tooltip-ink: #e7ece1;
+  --tooltip-muted: #bdc9ba;
 }
 :root[data-theme="dark"] {
-  --porcelain: #141921;
-  --paper: #1b222c;
-  --ink: #f2f5f9;
-  --muted: #a5afbe;
-  --line: #303945;
-  --blue: #ffad78;
-  --teal: #54cdb0;
-  --coral: #ff8ba3;
-  --amber: #f2bd5b;
-  --soft: #242c37;
-  --orange-soft: #39281f;
+  --porcelain: #1c231e;
+  --paper: #252e27;
+  --soft: #2e3930;
   --shadow: none;
+  --ink: #dee5d9;
+  --muted: #a5b39f;
+  --line: #3c493e;
+  --blue: #d09265;
+  --accent: #b77749;
+  --teal: #73aa91;
+  --coral: #c28394;
+  --amber: #c0a267;
+  --partial: #ab9bbf;
+  --orange-soft: #3c3428;
+  --action: #a25a30;
+  --action-hover: #8b4d28;
+  --action-ink: #f0e9dc;
+  --tooltip: #d1dbc9;
+  --tooltip-ink: #27352a;
+  --tooltip-muted: #52644f;
 }
 body {
   background: var(--porcelain);
@@ -93,7 +109,7 @@ body {
   box-shadow: var(--shadow);
 }
 .primary-button {
-  background: #c64b12;
+  background: var(--action);
   box-shadow: none;
   border-radius: 11px;
   min-height: 48px;
@@ -101,7 +117,7 @@ body {
   font-size: 14px;
 }
 .primary-button:hover {
-  background: #aa3d0d;
+  background: var(--action-hover);
   box-shadow: none;
 }
 .secondary-button {
@@ -172,8 +188,8 @@ body {
   border-radius: 15px;
 }
 .resident-focus-card {
-  background: #c64b12;
-  color: #fff;
+  background: #97431f;
+  color: var(--action-ink);
   border-radius: 19px;
   padding: 22px;
   box-shadow: 0 8px 20px #a53c0d12;
@@ -191,11 +207,11 @@ body {
 }
 .resident-focus-card .status-pill {
   background: #ffffff24;
-  color: #fff;
+  color: var(--action-ink);
 }
 .resident-focus-label {
   font-size: 12px;
-  color: #ffe4d5;
+  color: #e8cfb7;
   margin: 0 0 4px;
 }
 .resident-focus-amount {
@@ -209,7 +225,7 @@ body {
 .resident-focus-due {
   margin: 8px 0 22px;
   font-size: 12px;
-  color: #ffe4d5;
+  color: #e8cfb7;
 }
 .focus-pay-button {
   display: flex;
@@ -218,8 +234,8 @@ body {
   gap: 8px;
   min-height: 48px;
   border-radius: 11px;
-  background: #fff;
-  color: #ad3e0c;
+  background: var(--paper);
+  color: var(--blue);
   font-size: 14px;
   font-weight: 650;
 }
@@ -746,4 +762,11 @@ body {
     font-size: 12px;
     padding: 8px 4px;
   }
+}
+
+:root[data-theme="dark"] .resident-focus-card:not(.settled) {
+  background: #713e29;
+}
+.primary-button {
+  color: var(--action-ink);
 }
