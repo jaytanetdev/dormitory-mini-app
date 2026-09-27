@@ -1,47 +1,47 @@
 /* A small, focused bill wallet for residents. */
 :root {
-  --porcelain: #d7d9d2;
-  --paper: #e6e7e1;
-  --soft: #dde0d7;
+  --porcelain: #ebe7e1;
+  --paper: #f8f5ef;
+  --soft: #f0eae2;
   --shadow: 0 3px 14px #24302706;
-  --ink: #27322e;
-  --muted: #58655d;
-  --line: #c6cbc0;
-  --blue: #a2461c;
-  --accent: #b96739;
+  --ink: #332d28;
+  --muted: #74695f;
+  --line: #ddd5cb;
+  --blue: #aa461b;
+  --accent: #d1763c;
   --teal: #397e69;
   --coral: #a64e63;
   --amber: #916923;
   --partial: #76668f;
-  --orange-soft: #e3d7c6;
-  --action: #a2461c;
-  --action-hover: #873815;
-  --action-ink: #f3eee5;
-  --tooltip: #2b382f;
-  --tooltip-ink: #e7ece1;
-  --tooltip-muted: #bdc9ba;
+  --orange-soft: #f3e2cf;
+  --action: #aa461b;
+  --action-hover: #903815;
+  --action-ink: #fff5e9;
+  --tooltip: #382c24;
+  --tooltip-ink: #faf0e3;
+  --tooltip-muted: #d7c3b0;
 }
 :root[data-theme="dark"] {
-  --porcelain: #1c231e;
-  --paper: #252e27;
-  --soft: #2e3930;
+  --porcelain: #211e1c;
+  --paper: #2b2724;
+  --soft: #34302c;
   --shadow: none;
-  --ink: #dee5d9;
-  --muted: #a5b39f;
-  --line: #3c493e;
-  --blue: #d09265;
-  --accent: #b77749;
+  --ink: #eee5da;
+  --muted: #b9ab9d;
+  --line: #494039;
+  --blue: #efaa70;
+  --accent: #da8c53;
   --teal: #73aa91;
   --coral: #c28394;
   --amber: #c0a267;
   --partial: #ab9bbf;
-  --orange-soft: #3c3428;
-  --action: #a25a30;
-  --action-hover: #8b4d28;
-  --action-ink: #f0e9dc;
-  --tooltip: #d1dbc9;
-  --tooltip-ink: #27352a;
-  --tooltip-muted: #52644f;
+  --orange-soft: #413025;
+  --action: #b75022;
+  --action-hover: #9e401a;
+  --action-ink: #fff3e5;
+  --tooltip: #eadbc9;
+  --tooltip-ink: #382a21;
+  --tooltip-muted: #76604f;
 }
 body {
   background: var(--porcelain);
