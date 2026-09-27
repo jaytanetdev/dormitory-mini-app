@@ -1,0 +1,1 @@
+module.exports = { init: async () => { if (sessionStorage.getItem('e2e-liff') === 'error') throw new Error('LINE offline'); }, isLoggedIn: () => sessionStorage.getItem('e2e-liff') !== 'logged-out', getIDToken: () => 'e2e-id-token', getProfile: async () => ({displayName:'ลูกบ้านทดสอบ'}), login: () => {sessionStorage.removeItem('e2e-liff');location.reload();} };

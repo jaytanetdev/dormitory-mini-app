@@ -10,16 +10,14 @@ describe("resident authentication contract", () => {
 
   it("exchanges a LINE ID token at the resident auth endpoint", async () => {
     process.env.NEXT_PUBLIC_MOCK_MODE = "false";
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            data: { accessToken: "resident-jwt", expiresInSeconds: 3600 },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: { accessToken: "resident-jwt", expiresInSeconds: 3600 },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
     vi.stubGlobal("fetch", fetchMock);
     const { api } = await import("./api-client");
 
@@ -100,5 +98,123 @@ describe("resident authentication contract", () => {
       rejectReason: "ยอดไม่ตรง",
       slipUrl: "https://example.test/slip.png",
     });
+  });
+});
+
+describe("resident API failure and upload contracts", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.resetModules();
+    vi.useRealTimers();
+    delete process.env.NEXT_PUBLIC_MOCK_MODE;
+  });
+  const load = async () => {
+    process.env.NEXT_PUBLIC_MOCK_MODE = "false";
+    return (await import("./api-client")).api;
+  };
+  it.each([401, 403, 409, 500])(
+    "preserves HTTP %s errors from the API envelope",
+    async (status) => {
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockResolvedValue(
+            new Response(
+              JSON.stringify({ errors: [{ message: "server-message" }] }),
+              { status },
+            ),
+          ),
+      );
+      const api = await load();
+      await expect(api.invoices()).rejects.toMatchObject({
+        status,
+        message: "server-message",
+      });
+    },
+  );
+  it("handles network failure as 503", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(Error("offline")));
+    await expect((await load()).invoices()).rejects.toMatchObject({
+      status: 503,
+    });
+  });
+  it("rejects non-JSON success response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("<html>bad gateway</html>")),
+    );
+    await expect((await load()).invoices()).rejects.toMatchObject({
+      status: 502,
+    });
+  });
+  it("aborts requests that exceed timeout", async () => {
+    const api = await load();
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        (_url, options) =>
+          new Promise((_resolve, reject) =>
+            options.signal.addEventListener("abort", () =>
+              reject(new DOMException("aborted", "AbortError")),
+            ),
+          ),
+      ),
+    );
+    const result = api.invoices();
+    const assertion = expect(result).rejects.toMatchObject({ status: 504 });
+    await vi.advanceTimersByTimeAsync(20000);
+    await assertion;
+  });
+  it("uploads multipart with resident token and server payment id", async () => {
+    const values = new Map([["resident_access_token", "resident-jwt"]]);
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("sessionStorage", {
+      getItem: (key: string) => values.get(key),
+      setItem: (key: string, value: string) => values.set(key, value),
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ data: { id: "payment" } })),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const api = await load();
+    const file = new File(["png"], "slip.png", { type: "image/png" });
+    expect(
+      await api.uploadSlip("invoice", file, "2026-09-06T10:00:00Z", 3000),
+    ).toEqual({ paymentId: "payment" });
+    const options = fetchMock.mock.calls[0][1];
+    expect(options.body).toBeInstanceOf(FormData);
+    expect(options.body.get("invoiceId")).toBe("invoice");
+    expect(options.body.get("amount")).toBe("3000");
+    expect(options.headers.Authorization).toBe("Bearer resident-jwt");
+    expect(options.headers).not.toHaveProperty("Content-Type");
+  });
+  it("claim stores returned resident token", async () => {
+    const setItem = vi.fn();
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("sessionStorage", { getItem: () => null, setItem });
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              data: { accessToken: "claimed", expiresInSeconds: 3600 },
+            }),
+          ),
+        ),
+    );
+    await (
+      await load()
+    ).claimBranch("branch", {
+      idToken: "line",
+      fullName: "test",
+      roomNumber: "101",
+    });
+    expect(setItem).toHaveBeenCalledWith("resident_access_token", "claimed");
   });
 });
