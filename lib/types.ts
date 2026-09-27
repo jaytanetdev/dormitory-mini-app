@@ -28,6 +28,7 @@ export interface Invoice {
   total: number;
   outstanding?: number;
   roomNumber: string;
+  payments?: PaymentHistoryItem[];
   items: InvoiceItem[];
   meters: MeterCharge[];
 }
@@ -38,6 +39,11 @@ export interface PaymentHistoryItem {
   periodLabel: string;
   amount: number;
   paidAt?: string;
+  createdAt?: string;
+  invoiceNumber?: string;
+  rejectReason?: string | null;
+  slipUrl?: string;
+  receiptNumber?: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
 }
 

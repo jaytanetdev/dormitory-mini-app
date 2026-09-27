@@ -16,7 +16,7 @@ interface RawInvoiceItem { id: string; code: string; description: string; quanti
 interface RawInvoice {
   id: string; number: string; status: Invoice["status"]; total: string | number; dueDate: string; issuedAt?: string | null; paidAt?: string | null;
   room: { number: string }; period: { year: number; month: number }; items?: RawInvoiceItem[];
-  payments?: Array<{ id?: string; amount: string | number; paidAt?: string; status?: "PENDING" | "APPROVED" | "REJECTED" }>;
+  payments?: Array<{ id?: string; amount: string | number; paidAt?: string; createdAt?: string; rejectReason?: string | null; slip?: { fileUrl: string } | null; receipt?: { number: string } | null; status?: "PENDING" | "APPROVED" | "REJECTED" }>;
 }
 interface RawInvite { expiresAt: string; room: { number: string }; property: { name: string }; branch?: { name: string; address?: string | null; phone?: string | null }; residentHint?: string; }
 interface RawBranchClaim { branch: { name: string; address?: string | null; phone?: string | null }; line?: { liffId?: string | null; displayName?: string | null }; }
@@ -64,7 +64,7 @@ function mapPayments(invoice: RawInvoice): PaymentHistoryItem[] {
   return (invoice.payments ?? []).map((payment, index) => ({
     id: payment.id ?? invoice.id + '-' + index, invoiceId: invoice.id,
     periodLabel: periodLabel(invoice.period), amount: asNumber(payment.amount),
-    paidAt: payment.paidAt, status: payment.status ?? "APPROVED",
+    paidAt: payment.paidAt, createdAt: payment.createdAt, invoiceNumber: invoice.number, rejectReason: payment.rejectReason, slipUrl: payment.slip?.fileUrl, receiptNumber: payment.receipt?.number, status: payment.status ?? "PENDING",
   }));
 }
 
@@ -76,7 +76,7 @@ function mapInvoice(raw: RawInvoice): Invoice {
   const rawItems = raw.items ?? [];
   const meterItems = rawItems.filter((item) => item.code === "WATER" || item.code === "ELECTRIC");
   return {
-    id: raw.id, number: raw.number, status, outstanding: raw.status === "PAID" ? 0 : Math.max(0, asNumber(raw.total) - approved), total: asNumber(raw.total), dueAt: raw.dueDate,
+    id: raw.id, number: raw.number, status, payments, outstanding: raw.status === "PAID" ? 0 : Math.max(0, asNumber(raw.total) - approved), total: asNumber(raw.total), dueAt: raw.dueDate,
     issuedAt: raw.issuedAt ?? raw.dueDate, roomNumber: raw.room.number, periodLabel: periodLabel(raw.period),
     items: rawItems.filter((item) => item.code !== "WATER" && item.code !== "ELECTRIC").map((item) => ({ id: item.id, label: item.description, amount: asNumber(item.amount) })),
     meters: meterItems.map((item) => {
@@ -101,16 +101,15 @@ export const api = {
     if (!contract) throw new ApiClientError(404, "ไม่พบสัญญาห้องที่กำลังใช้งาน");
     return { id: raw.id, displayName: raw.fullName, room: { id: contract.room.id, number: contract.room.number, building: contract.room.building.name, branch: raw.branch.name, contractStatus: contract.status } };
   },
-  home: async (): Promise<{ profile: ResidentProfile; invoice: Invoice; payments: PaymentHistoryItem[] }> => {
+  home: async (): Promise<{ profile: ResidentProfile; invoice: Invoice | null; payments: PaymentHistoryItem[] }> => {
     if (MOCK_MODE) return delay({ profile: mockProfile, invoice: mockInvoices[0], payments: mockPayments });
     const raw = await request<RawMiniHome>("/miniapp/home");
     const contract = raw.profile.contracts[0];
     if (!contract) throw new ApiClientError(404, "ไม่พบสัญญาห้องที่กำลังใช้งาน");
-    if (!raw.invoice) throw new ApiClientError(404, "ยังไม่มีใบแจ้งหนี้");
     const payments = raw.invoices.flatMap(mapPayments);
     return {
       profile: { id: raw.profile.id, displayName: raw.profile.fullName, room: { id: contract.room.id, number: contract.room.number, building: contract.room.building.name, branch: raw.profile.branch.name, contractStatus: contract.status } },
-      invoice: mapInvoice(raw.invoice),
+      invoice: raw.invoice ? mapInvoice(raw.invoice) : null,
       payments,
     };
   },
